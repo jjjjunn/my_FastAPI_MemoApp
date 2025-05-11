@@ -207,7 +207,7 @@
             var title = document.getElementById('title-' + id).value;
             var content = document.getElementById('content-' + id).value;
 
-            fetch('/memos' + id, {
+            fetch('/memos/' + id, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -227,7 +227,7 @@
         function deleteMemo(id) {
             if (!confirm('메모를 삭제하시겠습니까?')) return;
 
-            fetch('/memos' + id, {
+            fetch('/memos/' + id, {
                 method: 'DELETE',
             })
             .then(response => response.json())
