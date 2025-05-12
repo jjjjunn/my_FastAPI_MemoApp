@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 import re
 from email_service import EmailService, EmailServiceBye
 import logging
+from fastapi.responses import RedirectResponse
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -35,6 +36,14 @@ def send_bye_email(email: str):
     except Exception as e:
         logger.error(f"이메일 전송 실패: {e}")  # 에러 로깅
      
+
+@router.get('/')
+async def read_root(request: Request, message: str = None):
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "message": message
+    })
+
 
 # 회원 가입
 @router.post("/signup")
@@ -79,7 +88,8 @@ async def signup(signup_data: UserCreate, background_tasks: BackgroundTasks, db:
 async def login(request: Request, signin_data: UserLogin, db: Session=Depends(get_db)):
     user = db.query(User).filter(User.username == signin_data.username).first()
     if user and verify_password(signin_data.password, user.hashed_password):
-        request.session["username"] = user.username
+        request.session["username"] = user.username # username을 세션에 저장
+        request.session["id"] = user.id # id를 세션에 저장
         return {"message": "로그인 성공!"}
     else:
         raise HTTPException(status_code=401, detail="로그인이 실패하였습니다.")
@@ -92,25 +102,33 @@ async def logout(request: Request):
 
 # 회원 탈퇴
 @router.delete("/users/{id}")
-async def delete_user(request: Request, id:int, background_tasks: BackgroundTasks, db:Session = Depends(get_db)):
+async def delete_user(request: Request, id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     user_id = request.session.get("id")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Not Authorized")
+
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User를 찾을 수 없습니다.")
+
     db.delete(user)
 
     try:
-        db.commit() # 데이터베이스에서 사용자 정보 삭제
-    except Exception:
-        db.rollback() # 에러 발생 시 롤백
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"회원 탈퇴 오류: {e}")  # 에러 내용 출력
         raise HTTPException(status_code=500, detail="회원 탈퇴에 실패하였습니다. 다시 시도해 주세요.")
-    
-    # 백그라운드 작업 등록
+
+    # 세션 비우기
+    request.session.clear()
+
     background_tasks.add_task(send_bye_email, user.email)
 
-    return {"message": "그동안 이용해 주셔서 감사합니다. 탈퇴 안내 이메일이 발송되었습니다."}
+    # 쿠키 삭제 + 홈 리디렉션
+    response = RedirectResponse(url="/?message=goodbye", status_code=303)
+    response.delete_cookie("session")  # session 쿠키 이름이 정확히 이건지 확인하세요
+    return response
 
 
 # 메모 생성
@@ -144,7 +162,9 @@ async def list_memos(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("memos.html", {
         "request": request, 
         "memos": memos,
-        "username": username}) # 사용자 이름 추가
+        "username": username, # 사용자 이름 추가
+        "user_info": user
+        }) 
 
 # 메모 수정
 @router.put("/memos/{memo_id}")

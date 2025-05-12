@@ -153,6 +153,10 @@
 </head>
 <body>
     <div class="container">
+        {% if message == 'goodbye' %}
+        <p style="color: red;">그동안 이용해 주셔서 감사합니다. 탈퇴 안내 이메일이 발송되었습니다.</p>
+        {% endif %}
+
         <h1>마이 메모 앱에 오신 것을 환영합니다!</h1>
         <p>간단한 메모를 작성하고 관리할 수 있는 앱입니다.</p>
 
