@@ -7,10 +7,12 @@ from database import Base
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)  # 정수형, PK
-    username = Column(String(100), unique=True, index=True, nullable=True)  # 구글 로그인 시 자동 설정 가능
+    username = Column(String(100), unique=True, index=True, nullable=True)  # 소셜 로그인 시 자동 설정 가능
     email = Column(String(200), unique=True)  # 이메일은 유일해야 함
     hashed_password = Column(String(512), nullable=True)  # 비밀번호는 선택적
     google_id = Column(String(100), unique=True, index=True, nullable=True)  # 구글 계정의 고유 ID
+    kakao_id = Column(String(100), unique=True, index=True, nullable=True) # 카카오 계정의 고유 ID
+    naver_id = Column(String(100), unique=True, index=True, nullable=True) # 네이버 계정의 고유 ID
 
 # Memo 모델 정의
 class Memo(Base):

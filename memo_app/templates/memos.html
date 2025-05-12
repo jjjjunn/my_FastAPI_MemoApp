@@ -256,6 +256,27 @@
                 console.error('Error:', error);
             });
         }
+
+        function deleteUser(id) {
+            if (!confirm('정말로 계정을 삭제하시겠습니까?')) return;
+
+            fetch('/users/' + id, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('계정이 성공적으로 삭제되었습니다.');
+                    window.location.reload();
+                } else {
+                    alert('삭제 실패: ' + (data.message || '알 수 없는 오류'));
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('서버 오류가 발생했습니다.');
+            });
+        }
     </script>
 </head>
 <body>
@@ -287,12 +308,16 @@
                 <input type="text" id="title-{{ memo.id }}" value="{{ memo.title }}" class="form-control memo-title" readonly>
                 <textarea id="content-{{ memo.id }}" class="form-control memo-content" readonly>{{ memo.content }}</textarea>
                 <div class="edit-buttons">
-                    <button onclick="toggleEdit({{ memo.id }})" class="btn btn-edit"><i class="fas fa-edit"></i></button>
+                    <button onclick="toggleEdit({{ memo.id }})" class="btn-btn-edit"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteMemo({{ memo.id }})" class="btn btn-delete"><i class="fas fa-trash-alt"></i></button>
                 </div> 
             </div>
         </div>
         {% endfor %}
+        <div class="text-end my-4">
+        <button onclick="deleteUser( {{ user_info.id }})" class="btn btn-sm btn-danger deleteUser-button">
+            <i class="fas fa-user-slash"></i> 회원 탈퇴</button>
+        </div>
     </div>
 </body>
 </html>

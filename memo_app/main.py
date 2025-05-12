@@ -6,6 +6,8 @@ from controllers import router # 컨트롤러 라우터 import
 from database import Base, engine # 데이터베이스 설정 import
 from starlette.middleware.sessions import SessionMiddleware
 from oauth import google
+from oauth import kakao
+from oauth import naver
 
 # FastAPI 애플리케이션 생성
 app = FastAPI()
@@ -18,6 +20,8 @@ templates = Jinja2Templates(directory="templates")
 # 라우터 포함
 app.include_router(router)
 app.include_router(google.router) # Google OAuth2 라우터 포함
+app.include_router(kakao.router) # KAKAO OAuth2 라우터 포함
+app.include_router(naver.router) # NAVER OAuth2 라우터 포함
 
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)

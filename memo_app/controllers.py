@@ -1,17 +1,44 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, APIRouter
+from fastapi import FastAPI, Request, Depends, HTTPException, APIRouter, BackgroundTasks
 from sqlalchemy.orm import Session
 from models import User, Memo # 모델 import
 from schemas import UserCreate, UserLogin, MemoCreate, MemoUpdate # 스키마 import
 from dependencies import get_db, get_password_hash, verify_password # 의존성 import
 from fastapi.templating import Jinja2Templates
 import re
+from email_service import EmailService, EmailServiceBye
+import logging
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# 환영 이메일 전송
+def send_welcome_email(email: str):
+    # 이메일 전송
+    email_service = EmailService() # EmailService 클래스 인스턴스 생성
+    try:
+        email_service.send_email(receiver_email=email) # 이메일 전송
+    except Exception as e:
+        # 이메일 전송 실패 시 에러 메시지 반환
+        print(f"이메일 전송 실패: {e}") # 에러 로깅
+
+# 탈퇴 안내 이메일 전송
+def send_bye_email(email: str):
+    # 이메일 전송
+    email_service = EmailServiceBye() # EmailServiceBye 클래스 인스턴스 생성
+    try:
+        email_service.send_email(receiver_email=email) # 이메일 전송
+        logger.info(f"탈퇴 안내 이메일을 {email}로 전송했습니다.")
+    except Exception as e:
+        logger.error(f"이메일 전송 실패: {e}")  # 에러 로깅
+     
+
 # 회원 가입
 @router.post("/signup")
-async def signup(signup_data: UserCreate, db: Session=Depends(get_db)):
+async def signup(signup_data: UserCreate, background_tasks: BackgroundTasks, db: Session=Depends(get_db)):
     # ID 규칙 확인: 영어 소문자와 숫자만 허용
     if not re.fullmatch(r"[a-z0-9]+", signup_data.username):
         raise HTTPException(status_code=400, detail="사용자 이름은 영어 소문자와 숫자로만 구성되어야 합니다.")
@@ -41,7 +68,11 @@ async def signup(signup_data: UserCreate, db: Session=Depends(get_db)):
         db.rollback() # 에러 발생 시 롤백
         raise HTTPException(status_code=500, detail="회원 가입 실패. 다시 시도해 주세요.")
     db.refresh(new_user)
-    return {"message": "회원가입을 성공하였습니다."}
+
+    # 백그라운드 작업 등록
+    background_tasks.add_task(send_welcome_email, new_user.email)
+
+    return {"message": "회원가입을 성공하였습니다. 이메일을 확인해 주세요."}
 
 # 로그인
 @router.post("/login")
@@ -58,6 +89,28 @@ async def login(request: Request, signin_data: UserLogin, db: Session=Depends(ge
 async def logout(request: Request):
     request.session.pop("username", None)
     return {"message": "로그아웃 완료!"}
+
+# 회원 탈퇴
+@router.delete("/users/{id}")
+async def delete_user(request: Request, id:int, background_tasks: BackgroundTasks, db:Session = Depends(get_db)):
+    user_id = request.session.get("id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Not Authorized")
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User를 찾을 수 없습니다.")
+    db.delete(user)
+
+    try:
+        db.commit() # 데이터베이스에서 사용자 정보 삭제
+    except Exception:
+        db.rollback() # 에러 발생 시 롤백
+        raise HTTPException(status_code=500, detail="회원 탈퇴에 실패하였습니다. 다시 시도해 주세요.")
+    
+    # 백그라운드 작업 등록
+    background_tasks.add_task(send_bye_email, user.email)
+
+    return {"message": "그동안 이용해 주셔서 감사합니다. 탈퇴 안내 이메일이 발송되었습니다."}
 
 
 # 메모 생성
@@ -118,7 +171,7 @@ async def update_user(request:Request, memo_id: int, memo: MemoUpdate, db: Sessi
 
 # 메모 삭제
 @router.delete("/memos/{memo_id}")
-async def delete_user(request:Request, memo_id: int, db: Session = Depends(get_db)):
+async def delete_memo(request:Request, memo_id: int, db: Session = Depends(get_db)):
     username = request.session.get("username")
     if username is None:
         raise HTTPException(status_code=401, detail="Not Authorized")
@@ -142,26 +195,39 @@ async def read_root(request: Request):
 async def about():
     return {"message": "메모 앱 소개 페이지 입니다."}
 
-# 구글 로그인 후 사용자 정보 처리
-def create_or_update_user(db: Session, user_info: dict):
-    user = db.query(User).filter(
-        (User.email == user_info['email']) | (User.google_id == user_info['google_id'])
-    ).first()
+# 소셜 로그인 후 사용자 정보 처리
+def create_or_update_social_user(db: Session, user_info: dict, provider: str):
+    # provider 별로 ID 및 이름 필드 설정
+    social_id_filed = f"{provider}_id"
+    user_name = (
+        user_info.get('user_name') or
+        user_info.get('profile_nickname') or
+        user_info.get('name')
+    )
+    social_id_value = user_info.get(social_id_filed)
 
+    if not user_info.get('email') or not social_id_value:
+        raise ValueError('email 또는 소셜 ID가 제공되지 않았습니다.')
+    
+    # 기존 사용자 조회
+    user = db.query(User).filter(
+        (User.email == user_info['email']) | (getattr(User, social_id_filed) == social_id_value)).first()
+    
     if not user:
         # 신규 사용자 생성
         user = User(
             username=user_info.get('username'),
             email=user_info['email'],
-            google_id=user_info['google_id']
         )
+        setattr(user, social_id_filed, social_id_value)
         db.add(user)
     else:
         # 기존 사용자 정보 업데이트
-        user.username = user_info.get('username') or user.username  # 이름이 없으면 업데이트 하지 않음
-        user.google_id = user_info['google_id']  # 구글 ID는 업데이트
+        user.username = user_name or user.username  # 이름이 없으면 업데이트 하지 않음
+        setattr(user, social_id_filed, social_id_value)
         db.merge(user)  # 업데이트 후 세션에 반영
 
     db.commit()
     db.refresh(user)
     return user
+
