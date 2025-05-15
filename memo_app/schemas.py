@@ -6,11 +6,19 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password : str # 해시 전 패스워드
+    password_confirm: str 
 
 # 회원 로그인 시 데이터 검증
 class UserLogin(BaseModel):
     username: str
     password: str # 해시 전 패스워드
+
+# 비밀번호 변경 시 데이터 검증
+class UserUpdate(BaseModel):
+    username: str
+    current_password: str # 해시 전 패스워드
+    new_password: str
+    new_password_confirm: str
 
 # pydantic 사용하여 데이터 검증 수행
 class MemoCreate(BaseModel):

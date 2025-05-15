@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>아이디/비밀번호 찾기</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column; /* 세로 정렬 */
+            align-items: center;
+            gap: 2rem; /* 위아래 간격 */
+        }
+
+        .container {
+            max-width: 400px;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #007bff;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+        .form-group label {
+            margin-bottom: .5rem;
+            color: #888;
+            text-align: left;
+            display: block;
+        }
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+        }
+        .buttons button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .buttons button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 1rem;
+            color: #28a745;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <h1>아이디 찾기</h1>
+            <form id="find-id-form" onsubmit="return submitFormID(event)">
+                <div class="form-group">
+                    <label for="find-id-email">가입한 이메일 주소</label>
+                    <input type="email" id="find-id-email" name="email" required>
+                </div>
+                <div class="buttons">
+                    <button type="submit">아이디 전송</button>
+                </div>
+            </form>
+            <div id="find-id-message"></div>
+        </div>
+
+        <div class="container">
+            <h1>비밀번호 찾기</h1>
+            <form id="find-pw-form" onsubmit="return submitFormPW(event)">
+                <div class="form-group">
+                    <label for="find-pw-username">사용자 이름</label>
+                    <input type="text" id="find-pw-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="find-pw-email">이메일 주소</label>
+                    <input type="email" id="find-pw-email" name="email" required>
+                </div>
+                <div class="buttons">
+                    <button type="submit">임시비밀번호 전송</button>
+                </div>
+            </form>
+            <div id="find-pw-message"></div>
+        </div>
+        <p>
+            <a href="/" style="text-decoration: none; color:blue;">
+            뒤로가기 </a>
+        </p>
+    </div>
+
+    <script>
+        function submitFormID(event) {
+            event.preventDefault();  // 기본 제출 이벤트 방지
+
+            const email = document.getElementById('find-id-email').value;
+            const messageDiv = document.getElementById('find-id-message');
+
+            fetch('/send-username', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.detail || '이메일 전송에 실패했습니다.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('find-id-form').reset(); // 폼 초기화
+                messageDiv.innerText = data.message;
+                messageDiv.style.color = '#28a745'; // 성공 메시지 색상
+            })
+            .catch(error => {
+                messageDiv.innerText = error.message;
+                messageDiv.style.color = '#dc3545'; // 에러 메시지 색상
+            });
+        }
+
+        function submitFormPW(event) {
+            event.preventDefault();  // 기본 제출 이벤트 방지
+
+            const username = document.getElementById('find-pw-username').value;
+            const email = document.getElementById('find-pw-email').value;
+            const messageDiv = document.getElementById('find-pw-message');
+
+            fetch('/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, email: email })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.detail || '이메일 전송에 실패했습니다.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('find-pw-form').reset(); // 폼 초기화
+                messageDiv.innerText = data.message;
+                messageDiv.style.color = '#28a745'; // 성공 메시지 색상
+            })
+            .catch(error => {
+                messageDiv.innerText = error.message;
+                messageDiv.style.color = '#dc3545'; // 에러 메시지 색상
+            });
+        }
+    </script>
+</body>
+</html>

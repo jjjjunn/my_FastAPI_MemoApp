@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>아이디/비밀번호 찾기</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #007bff;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+        .form-group label {
+            margin-bottom: .5rem;
+            color: #888;
+            text-align: left;
+            display: block;
+        }
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+        }
+        .buttons button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .buttons button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 1rem;
+            color: #28a745;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>비밀번호 변경하기</h1>
+
+        <form id="changePWForm" onsubmit="submitChangePWForm(event)">
+            <div class="form-group">
+                <label for="username">사용자 이름:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="current-pw">현재 비밀번호:</label>
+                <input type="password" id="current-pw" name="current_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new-pw">새로운 비밀번호:</label>
+                <input type="password" id="new-pw" name="new_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new-pw-confirm">비밀번호 확인:</label>
+                <input type="password" id="new-pw-confirm" name="confirm_password" required>
+            </div>
+            <div class="buttons">
+                <button type="submit">변경하기</button>
+            </div>
+            <div id="find-id-message" style="margin-top:10px;"></div> <!-- 메시지 표시용 -->
+            <p>
+            <a href="/" style="text-decoration: none; color:blue;">
+            뒤로가기 </a>
+            </p>
+        </form>
+        <script>
+        function submitChangePWForm(event) {
+            event.preventDefault();  // 기본 제출 이벤트 방지
+
+            const username = document.getElementById('username').value;
+            const currentpw = document.getElementById('current-pw').value;
+            const newpw = document.getElementById('new-pw').value;
+            const confirmpw = document.getElementById('new-pw-confirm').value;
+            const messageDiv = document.getElementById('find-id-message');
+
+            if (currentpw == newpw) {
+                alert( "새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+                return ;
+            }
+
+            if (newpw != confirmpw) {
+                alert( "새 비밀번호가 서로 일치하지 않습니다.");
+                return ;
+            }          
+
+            fetch('/change_pw', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    username: username,
+                    current_password: currentpw,
+                    new_password: newpw,
+                    new_password_confirm: confirmpw
+                })
+            })
+            .then(response => response.json().then(body => ({
+                status: response.status, body: body
+            })))
+            .then(result => {
+                if (result.status == 200) {
+                    alert(result.body.message); // 성공 팝업
+                    document.getElementById('changePWForm').reset(); // 비밀번호 변경 모든 칸 초기화
+                    //window.location.href = '/'; // 메인 페이지로 리다이렉트
+                } else {
+                        throw new Error(result.body.detail || '비밀번호 변경에 실패하였습니다.');
+                    } 
+            })
+            .catch(error => {
+                console.error('Error', error);
+                alert(error.message) // 실패 팝업
+            });
+        }
+        </script>

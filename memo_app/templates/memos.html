@@ -258,16 +258,21 @@
         }
 
         function deleteUser(id) {
+            // 계정 삭제 확인
             if (!confirm('정말로 계정을 삭제하시겠습니까?')) return;
 
             fetch('/users/' + id, {
                 method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    console.log(data);
                     alert('계정이 성공적으로 삭제되었습니다.');
-                    window.location.reload();
+                    window.location.href = '/'; // 로그아웃 후 홈페이지로 리다이렉트
                 } else {
                     alert('삭제 실패: ' + (data.message || '알 수 없는 오류'));
                 }
