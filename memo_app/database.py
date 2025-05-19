@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 # postgresql://user명:비밀번호@host이름/db이름
 DATABASE_URL = "postgresql://postgres:1234@localhost/memo_app" # 실무에서는 노출되지 않는 것이 좋음
 
-# 엔진 생성성
+# 엔진 생성
 engine = create_engine(DATABASE_URL)
 
 # 세션 생성

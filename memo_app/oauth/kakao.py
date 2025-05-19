@@ -82,26 +82,29 @@ async def callback(request: Request, db: Session = Depends(get_db)):  # get_db()
 
         # 사용자 정보 처리
         user_info_raw = userinfo_res.json()
-        kakao_response = user_info_raw.get("response", {})
+        kakao_id = str(user_info_raw.get("id"))
+        nickname = user_info_raw.get("properties", {}).get("nickname") or "User"
+        email = user_info_raw.get("kakao_account", {}).get("email")
 
         # 필수 정보 확인
-        if not kakao_response.get("nickname") or not kakao_response.get("id"):
-            logger.error(f"유효하지 않은 사용자 정보: {kakao_response}")
+        if not kakao_id or not nickname:
+            logger.error(f"유효하지 않은 사용자 정보: {user_info_raw}")
             return {"error": "Invalid user info"}
 
         user_info = {
-            "username": user_info_raw.get("properties", {}).get("nickname") or "User",
-            "email": user_info_raw.get("kakao_account", {}).get("email"),
-            "kakao_id": str(user_info_raw.get("id")) # 문자열로 형변환
+            "username": nickname,
+            "email": email,
+            "kakao_id": kakao_id, # 문자열로 형변환
         }
 
-        user = create_or_update_social_user(db, user_info, provider='kakao', request=request)
+        user = create_or_update_social_user(db, user_info, provider='kakao', request=request, access_token=access_token)
 
         # 로그인 후 세션에 정보 저장
         request.session["id"] = user.id  # 일반 사용자 ID
         request.session["username"] = user.username
         request.session["social_id"] = user_info["kakao_id"]  # 소셜 ID
         request.session["provider"] = 'kakao'  # 소셜 로그인 제공자
+        request.session['access_token'] = access_token
 
     # 로그인 성공 후 메모 페이지로 이동
     return RedirectResponse(url="/memos")

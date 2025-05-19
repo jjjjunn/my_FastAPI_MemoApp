@@ -25,12 +25,9 @@ async def google_unlink(access_token: str):
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers)
 
-    # if response.status_code == 200:
-    #     return {"message": "Google 연결 해제 완료"}
-    # else:
-    #     raise HTTPException(status_code=400, detail="Google 연결 해제 실패")
+    logger.info(f"Google 응답: {response.status_code} - {response.text}")
     
-    return response
+    return {"status": response.status_code, "text": response.text}
 
 # 카카오 연결 해제
 @router.post("/unlink/kakao")
@@ -43,12 +40,9 @@ async def kakao_unlink(access_token: str):
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers)
 
-    # if response.status_code == 200:
-    #     return {"message": "Kakao 연결 해제 완료"}
-    # else:
-    #     raise HTTPException(status_code=400, detail="Kakao 연결 해제 실패")
+    logger.info(f"Kakao 응답: {response.status_code} - {response.text}")
     
-    return response
+    return {"status": response.status_code, "text": response.text}
 
 
 # 네이버 연결 해제
@@ -58,7 +52,7 @@ NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 @router.post("/unlink/naver")
 async def naver_unlink(access_token: str):
     url = "https://nid.naver.com/oauth2.0/token"
-    params = {
+    data = {
         "grant_type": "delete",
         "client_id": NAVER_CLIENT_ID,
         "client_secret": NAVER_CLIENT_SECRET,
@@ -66,15 +60,14 @@ async def naver_unlink(access_token: str):
         "service_provider": "NAVER"
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, params=params)
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    # if response.status_code == 200:
-    #     return {"message": "NAVER 연결 해제 완료"}
-    # else:
-    #     raise HTTPException(status_code=400, detail="NAVER 연결 해제 실패")
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers)
+
+    logger.info(f"Naver 응답: {response.status_code} - {response.text}")
     
-    return response
+    return {"status": response.status_code, "text": response.text}
 
 # 소셜 연동 해제 함수
 async def social_unlink_task(provider: str, access_token):
@@ -93,7 +86,7 @@ async def social_unlink_task(provider: str, access_token):
             result = None
     
         if result and result.status_code == 200:
-            logger.info("소셜 연결 해제 성공")
+            logger.info(f"{provider} 연결 해제 성공")
         else:
             logger.warning(f"{provider} 연동 해제 실패: {result.status_code} - {result.text}")
     except Exception as e:

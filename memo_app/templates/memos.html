@@ -192,7 +192,7 @@
 
         function toggleEdit(id) {
             var titleEl = document.getElementById('title-' +  id);
-            var contentEl = document.getElementById('content-', id);
+            var contentEl = document.getElementById('content-' + id);
             var isReadOnly = titleEl.readOnly;
 
             titleEl.readOnly = !isReadOnly;
@@ -282,6 +282,40 @@
                 alert('서버 오류가 발생했습니다.');
             });
         }
+
+        // 비활동 시 자동 로그아웃 설정
+        let timer;
+        let countdown = 10 * 60 // 10분(초단위)
+
+        function startTimer() {
+            timer = setInterval(() => {
+                countdown--;
+
+            const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
+            const seconds = String(countdown % 60).padStart(2, '0');
+            document.getElementById('logout-timer').textContent = `${minutes}:${seconds}`;
+
+            if (countdown <= 0) {
+                clearTimeout(timer);
+                alert("10분 동안 활동이 없어 자동 로그아웃됩니다.");
+                fetch('/logout', {method: 'POST'})
+                    .then(() => window.location.href = '/login');
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            countdown = 10 * 60; // 다시 10분으로 리셋
+        }
+
+        window.onload = () => {
+            startTimer();
+        };
+
+        // 사용자 활동 감지
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.ontouchstart = resetTimer;
     </script>
 </head>
 <body>
@@ -292,6 +326,9 @@
                 <a href="#" class="btn btn-sm btn-danger username-button">
                     <i class="fas fa-user"></i> {{ username }}
                 </a>
+            </div>
+            <div style="position: fixed; top: 10px; right: 20px; font-weight:bold;">
+                자동 로그아웃까지 남은 시간: <span id="logout-timer">10:00</span>
             </div>
             <h1>나의 메모</h1>
             <div class="header-item">
@@ -313,7 +350,7 @@
                 <input type="text" id="title-{{ memo.id }}" value="{{ memo.title }}" class="form-control memo-title" readonly>
                 <textarea id="content-{{ memo.id }}" class="form-control memo-content" readonly>{{ memo.content }}</textarea>
                 <div class="edit-buttons">
-                    <button onclick="toggleEdit({{ memo.id }})" class="btn-btn-edit"><i class="fas fa-edit"></i></button>
+                    <button onclick="toggleEdit({{ memo.id }})" class="btn btn-edit"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteMemo({{ memo.id }})" class="btn btn-delete"><i class="fas fa-trash-alt"></i></button>
                 </div> 
             </div>

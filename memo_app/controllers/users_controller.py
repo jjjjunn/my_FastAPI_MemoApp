@@ -76,25 +76,27 @@ async def signup(signup_data: UserCreate, background_tasks: BackgroundTasks, db:
     return {"message": "회원가입을 성공하였습니다. 이메일을 확인해 주세요."}
 
 # 소셜 로그인 후 사용자 정보 처리
-def create_or_update_social_user(db: Session, user_info: dict, provider: str, request: Request):
+def create_or_update_social_user(db: Session, user_info: dict, provider: str, request: Request, access_token: str):
     logger.info(f"소셜 로그인 처리 시작: 제공자 {provider}, 사용자 정보 {user_info}")
 
     # provider 별로 ID 및 이름 필드 설정
-    social_id_filed = f"{provider}_id"
+    social_id_field = f"{provider}_id"
     user_name = (
         user_info.get('user_name') or
+        user_info.get('username') or
         user_info.get('profile_nickname') or
         user_info.get('name')
     )
-    social_id_value = user_info.get(social_id_filed)
+    social_id_value = user_info.get(social_id_field)
 
     if not user_info.get('email') or not social_id_value:
         logger.error("이메일 또는 소셜 ID가 제공되지 않았습니다.")
         raise ValueError('email 또는 소셜 ID가 제공되지 않았습니다.')
     
-    # 기존 사용자 조회
-    user = db.query(User).filter(
-        (User.email == user_info['email']) | (getattr(User, social_id_filed) == social_id_value)).first()
+    # 기존 사용자 조회: 소셜 ID 우선, 없으면 이메일 검색 (선택사항)
+    user = db.query(User).filter(getattr(User, social_id_field) == social_id_value).first()
+    if not user:
+        user = db.query(User).filter(User.email == user_info['email']).first()
 
     if not user:
         # 신규 사용자 생성
@@ -102,14 +104,14 @@ def create_or_update_social_user(db: Session, user_info: dict, provider: str, re
             username=user_info.get('username'),
             email=user_info['email'],
         )
-        setattr(user, social_id_filed, social_id_value)
+        setattr(user, social_id_field, social_id_value)
         db.add(user)
         logger.info(f"신규 사용자 생성: {user_info['email']} (소셜 ID: {social_id_value})")
     else:
         # 기존 사용자 정보 업데이트
         user.username = user_name or user.username  # 이름이 없으면 업데이트 하지 않음
         user.email = user_info['email'] # 이메일 업데이트
-        setattr(user, social_id_filed, social_id_value)
+        setattr(user, social_id_field, social_id_value)
         db.merge(user)  # 업데이트 후 세션에 반영
         logger.info(f"기존 사용자 업데이트: {user.email} (소셜 ID: {social_id_value})")
     try:
@@ -127,6 +129,7 @@ def create_or_update_social_user(db: Session, user_info: dict, provider: str, re
     request.session['username'] = user.username
     request.session['social_id'] = social_id_value
     request.session['provider'] = provider
+    request.session['access_token'] = access_token # 소셜 연동 해제 위함
 
     return user
 

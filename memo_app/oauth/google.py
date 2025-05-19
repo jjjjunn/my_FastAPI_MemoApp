@@ -38,6 +38,9 @@ async def login(request: Request):
         f"{GOOGLE_AUTH_URL}?response_type=code"
         f"&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
+        f"&scope=openid%20email%20profile"
+        f"&access_type=offline"
+        f"&prompt=consent"
         f"&state={state}"
     )
     return RedirectResponse(url=auth_url)
@@ -61,8 +64,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):  # get_db()
             'client_secret': CLIENT_SECRET,
             'redirect_uri': REDIRECT_URI,
             'grant_type': 'authorization_code',
-            'state': state,
-        })
+        }) # 'state': state, 구글 토큰에 요청 불가
         
         if token_res.status_code != 200:
             logger.error(f"Token 요청 실패: {token_res.status_code}: {token_res.text}")
@@ -82,25 +84,28 @@ async def callback(request: Request, db: Session = Depends(get_db)):  # get_db()
 
         # 사용자 정보 처리
         user_info_raw = userinfo_res.json()
-        google_response = user_info_raw.get("response", {})
+        google_id = str(user_info_raw.get("id"))
+        username = user_info_raw.get("name") or "User" # 이름이 없을 경우 기본값 설정
+        email = user_info_raw.get("email")
 
         # 필수 정보 확인
-        if not google_response.get("email") or not google_response.get("id"):
-            logger.error(f"유효하지 않은 사용자 정보: {google_response}")
+        if not google_id or not username:
+            logger.error(f"유효하지 않은 사용자 정보: {user_info_raw}")
             return {"error": "Invalid user info"}
         
         user_info = {
-            "username" : user_info_raw.get("name") or "User",  # 이름이 없을 경우 기본값 설정
-            "email" : user_info_raw.get("email"),
-            "google_id" : user_info_raw.get("id")
+            "username" : username,  
+            "email" : email,
+            "google_id" : google_id,
         }
 
-        user = create_or_update_social_user(db, user_info, provider='google', request=request)
+        user = create_or_update_social_user(db, user_info, provider='google', request=request, access_token=access_token)
         # 로그인 후 세션에 정보 저장
         request.session["id"] = user.id  # 일반 사용자 ID
         request.session["username"] = user.username
         request.session["social_id"] = user_info["google_id"]  # 소셜 ID
         request.session["provider"] = 'google'  # 소셜 로그인 제공자
+        request.session['access_token'] = access_token
 
     # 로그인 성공 후 메모 페이지로 이동
     return RedirectResponse(url="/memos")

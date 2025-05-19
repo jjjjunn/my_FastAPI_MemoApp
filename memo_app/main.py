@@ -56,7 +56,8 @@ async def sign_up(request: Request):
 # 로그아웃
 @app.post("/logout")
 async def logout(request: Request):
-    request.session.pop("username", None)
+    # request.session.pop("username", None)
+    request.session.clear()  # 모든 세션 값 삭제
     return {"message": "로그아웃 완료!"}
 
 # 아이디 비밀번호 찾기 페이지 엔드포인트

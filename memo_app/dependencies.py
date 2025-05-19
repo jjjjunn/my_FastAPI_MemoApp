@@ -1,4 +1,3 @@
-from sqlalchemy.orm import sessionmaker, Session, relationship
 from passlib.context import CryptContext
 from database import SessionLocal
 

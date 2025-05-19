@@ -100,13 +100,14 @@ async def callback(request: Request, db: Session = Depends(get_db)):
         }
 
         # DB에 유저 저장 또는 업데이트
-        user = create_or_update_social_user(db, user_info, provider='naver', request=request)
+        user = create_or_update_social_user(db, user_info, provider='naver', request=request, access_token=access_token)
 
         # 세션에 로그인 정보 저장
         request.session["id"] = user.id
         request.session["username"] = user.username
         request.session["social_id"] = user_info["naver_id"]
         request.session["provider"] = 'naver'
+        request.session['access_token'] = access_token
 
         logger.info(f"소셜 로그인 성공: {user.username}")
 
