@@ -47,6 +47,12 @@
 
 ---
 
+## 📦 ERD (Entity Relationship Diagram)
+
+![ERD](assets/ERD.png)
+
+---
+
 ## 📂 디렉터리 구조
 
 ```bash
