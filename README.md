@@ -53,6 +53,14 @@
 
 ---
 
+## 프로젝트 흐름
+
+![전체 흐름 화면: 로그인 및 계정 설정 관련](assets/project_flow1.png)
+---
+![전체 흐름 화면: 메모 관련](assets/project_flow2.png)
+
+---
+
 ## 📂 디렉터리 구조
 
 ```bash
