@@ -19,6 +19,17 @@
 | ⏳ **자동 로그아웃** | - 비활동 시 자동 로그아웃 타이머 설정 및 표시 |
 
 ---
+## 📌 기술 스택 뱃지
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
+![HTML](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![Jinja](https://img.shields.io/badge/Jinja2-B41717?style=flat-square&logo=jinja&logoColor=white)
+
+---
 
 ## 🧰 사용 기술 스택
 
@@ -115,16 +126,16 @@
 
 ---
 
-## 📌 기술 스택 뱃지
+## 🧭 향후 계획 (Roadmap)
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
-![HTML](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
-![CSS](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-![Jinja](https://img.shields.io/badge/Jinja2-B41717?style=flat-square&logo=jinja&logoColor=white)
-
+-   [ ] **관리자 모드 도입:** 관리자 모드를 도입하여 관리자가 사용자의 모든 컨텐츠를 관리할 수 있도록 개선
+-   [ ] **대시보드 적용:** 사용자의 활동을 기록하고 보여줄 수 있는 대시보드 도입
+-   [ ] **사용자 맞춤형 테마 및 UI 설정:** 다크 모드 지원, 글꼴 크기 조절 등 개인화 옵션 제공
+-   [ ] **메모 분류 및 태그 기능**: 메모별로 카테고리 분류 또는 태그를 달아 관리가 쉽도록 개선 / 태그별 검색 및 필터링 기능 추가
+-   [ ] **다양한 미디어 첨부 지원**: 텍스트뿐 아니라 이미지, 파일, 음성 메모 등 다양한 형태의 메모 작성 지원
 ---
 
-MIT License · ⓒ 2025 Recordian
+
+## 📜 라이선스 (License)
+
+이 프로젝트는 [MIT License](LICENSE) 를 따릅니다.
