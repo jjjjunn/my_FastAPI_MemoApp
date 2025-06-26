@@ -39,7 +39,7 @@
 | **프런트엔드** | HTML, CSS, JavaScript, Jinja2 |
 | **데이터베이스** | PostgreSQL |
 | **인증** | OAuth2 (구글, 카카오, 네이버), SessionMiddleware |
-| **비밀번호 해시** | passlib |
+| **비밀번호 해시** | passlib, bcrypt |
 | **이메일 발송** | Gmail SMTP, email.message |
 | **백그라운드 작업** | FastAPI BackgroundTasks |
 | **환경 변수 관리** | python-dotenv |
