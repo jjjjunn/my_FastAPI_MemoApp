@@ -19,8 +19,8 @@
 | ⏳ **자동 로그아웃** | - 비활동 시 자동 로그아웃 타이머 설정 및 표시 |
 
 ---
-## 📌 기술 스택 뱃지
 
+## 🧰 사용 기술 스택
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
@@ -29,9 +29,6 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![Jinja](https://img.shields.io/badge/Jinja2-B41717?style=flat-square&logo=jinja&logoColor=white)
 
----
-
-## 🧰 사용 기술 스택
 
 | 분야 | 기술 |
 |------|------|
